@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Math Practice</title>
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel compiles JSX in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: system-ui;
+      margin: 40px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+
+    input {
+      padding: 6px;
+      width: 80px;
+      margin-left: 10px;
+    }
+
+    .wrong {
+      color: red;
+    }
+
+    .correct {
+      color: green;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Singapore Math Practice</h2>
+
+<div id="root"></div>
+
+<script type="text/babel" src="singapore-math-3b.jsx"></script>
+
+</body>
+</html>
