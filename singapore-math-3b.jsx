@@ -1,3 +1,13 @@
+const STORAGE_KEY = "math-practice-history"
+
+function loadHistory() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}")
+}
+
+function saveHistory(history) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
+}
+
 import { useState, useEffect, useCallback, useRef } from "react";
 
 const TOPICS = [
