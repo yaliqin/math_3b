@@ -1,0 +1,17 @@
+{
+  "name": "Math Quest 3B — Singapore Math",
+  "short_name": "Math Quest 3B",
+  "description": "Singapore Math Dimensions 3B learning game",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0c29",
+  "theme_color": "#0f0c29",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f0c29'/><text x='50' y='62' font-size='50' text-anchor='middle' dominant-baseline='middle'>🧮</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
