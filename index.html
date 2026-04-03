@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Math Quest 3B">
+<title>Math Quest 3B</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,sans-serif;background:#0f0c29;color:#fff}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+button:active{transform:scale(.97)}
+::-webkit-scrollbar{display:none}
+#app{max-width:430px;margin:0 auto;min-height:100vh;background:linear-gradient(165deg,#0f0c29 0%,#1a1a4e 40%,#24243e 100%);position:relative;overflow:hidden;padding:14px 16px 80px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes celebrate{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(400px) rotate(720deg);opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+
+var _ac=null;
+function ac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state===“suspended”)_ac.resume();return _ac;}
+function sndOk(){try{var c=ac();[523,659,784,1047].forEach(function(f,i){var o=c.createOscillator(),g=c.createGain();o.type=“sine”;o.frequency.value=f;g.gain.setValueAtTime(.18,c.currentTime+i*.09);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.09+.25);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.09);o.stop(c.currentTime+i*.09+.3)})}catch(e){}}
+function sndNo(){try{var c=ac();[180,140].forEach(function(f,i){var o=c.createOscillator(),g=c.createGain();o.type=“triangle”;o.frequency.value=f;g.gain.setValueAtTime(.22,c.currentTime+i*.18);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.18+.22);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.18);o.stop(c.currentTime+i*.18+.25)})}catch(e){}}
+
+var TOPICS=[
+{id:“addition”,name:“Addition”,icon:”\u2795”,color:”#FF6B6B”,desc:“Add numbers up to 10,000”,levels:5},
+{id:“subtraction”,name:“Subtraction”,icon:”\u2796”,color:”#4ECDC4”,desc:“Subtract numbers up to 10,000”,levels:5},
+{id:“multiplication”,name:“Multiplication”,icon:”\u2716\uFE0F”,color:”#FFE66D”,desc:“Multiply up to 9x9 and beyond”,levels:5},
+{id:“division”,name:“Division”,icon:”\u2797”,color:”#A8E6CF”,desc:“Divide with and without remainders”,levels:5},
+{id:“fractions”,name:“Fractions”,icon:”\uD83C\uDF55”,color:”#DDA0DD”,desc:“Understand and compare fractions”,levels:5},
+{id:“money”,name:“Money”,icon:”\uD83D\uDCB0”,color:”#98D8C8”,desc:“Add, subtract and make change”,levels:5},
+{id:“measurement”,name:“Length and Mass”,icon:”\uD83D\uDCCF”,color:”#F7DC6F”,desc:“Measure in m, cm, kg, g”,levels:5},
+{id:“time”,name:“Time”,icon:”\uD83D\uDD50”,color:”#BB8FCE”,desc:“Tell time and calculate duration”,levels:5},
+{id:“geometry”,name:“Geometry”,icon:”\uD83D\uDCD0”,color:”#85C1E9”,desc:“Angles, shapes and perimeter”,levels:5},
+{id:“bar_models”,name:“Bar Models”,icon:”\uD83D\uDCCA”,color:”#F0B27A”,desc:“Solve word problems visually”,levels:5}
+];
+var CHEERS=[“Amazing job!”,“Math star!”,“Brilliant!”,“Champion!”,“Nailed it!”,“Math wizard!”,“Fantastic!”,“Getting stronger!”,“Awesome!”];
+var THINKS=[“Draw a picture to help!”,“What do you already know?”,“Break it into parts!”,“Try working backwards!”,“Estimate first!”,“What patterns?”];
+
+function R(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i–){var j=R(0,i);var t=a[i];a[i]=a[j];a[j]=t}return a}
+function p2(n){return n<10?“0”+n:””+n}
+function mc(cor,lo,hi){var s={},a=[cor];s[cor]=1;var t=0;while(a.length<4&&t++<80){var w=Math.random()<.5?cor+R(-5,5):R(Math.max(lo,cor-20),Math.min(hi,cor+20));if(w!==cor&&w>=lo&&!s[w]){a.push(w);s[w]=1}}while(a.length<4){var v=cor+a.length*7;a.push(v)}return shuf(a)}
+function hasCd(ch,ans){if(typeof ans!==“number”)return false;var c=0;for(var i=0;i<ch.length;i++)if(ch[i]!==ans&&typeof ch[i]===“number”&&Math.abs(ch[i]-ans)<=2)c++;return c>=2}
+
+function gAdd(lv){var a,b;if(lv<=1){a=R(10,99);b=R(10,99)}else if(lv<=2){a=R(100,999);b=R(10,99)}else if(lv<=3){a=R(100,999);b=R(100,999)}else if(lv<=4){a=R(1000,4999);b=R(100,999)}else{a=R(1000,9999);b=R(1000,9999)}var ans=a+b;var s=lv>=3?a+” books in Jan, “+b+” in Feb. Total?”:null;return{q:s||a+” + “+b+” = ?”,ans:ans,ch:mc(ans,0,20000),hint:“Add from left: thousands, hundreds, tens, ones.”,think:“Can you solve it differently?”,tp:“n”}}
+function gSub(lv){var a,b;if(lv<=1){a=R(20,99);b=R(10,a-1)}else if(lv<=2){a=R(100,999);b=R(10,99)}else if(lv<=3){a=R(200,999);b=R(100,a-1)}else if(lv<=4){a=R(1000,5000);b=R(100,999)}else{a=R(2000,10000);b=R(1000,a-1)}var ans=a-b;return{q:a+” - “+b+” = ?”,ans:ans,ch:mc(ans,0,10000),hint:“What + “+b+” = “+a+”?”,think:“Check: answer + “+b+” = “+a,tp:“n”}}
+function gMul(lv){var a,b;if(lv<=1){a=R(2,5);b=R(2,5)}else if(lv<=2){a=R(2,9);b=R(2,9)}else if(lv<=3){a=R(6,9);b=R(6,9)}else if(lv<=4){a=R(10,20);b=R(2,9)}else{a=R(11,99);b=R(2,9)}var ans=a*b;return{q:lv>=2?a+” bags, “+b+” apples each. Total?”:a+” x “+b+” = ?”,ans:ans,ch:mc(ans,0,1000),hint:a+” groups of “+b+”. Skip count!”,think:“Does “+a+“x”+b+” = “+b+“x”+a+”?”,tp:“n”}}
+function gDiv(lv){var d,q2;if(lv<=1){d=R(2,5);q2=R(2,5)}else if(lv<=2){d=R(2,9);q2=R(2,9)}else if(lv<=3){d=R(3,9);q2=R(5,12)}else if(lv<=4){d=R(2,9);q2=R(10,30)}else{d=R(4,9);q2=R(10,99)}var dv=d*q2+(lv>=4?R(0,d-1):0);var ans=Math.floor(dv/d);return{q:dv+” / “+d+” = ?”,ans:ans,ch:mc(ans,0,500),hint:d+” x ? is close to “+dv,think:“Write a multiplication fact!”,tp:“n”}}
+
+function gFrac(lv){
+var dens=[2,3,4,5,6,8];
+if(lv<=2){var den=dens[R(0,5)],num=R(1,den-1),ans=num+”/”+den;var s={},a=[ans];s[ans]=1;for(var i=1;i<=den;i++){var f=i+”/”+den;if(i!==num&&!s[f]){a.push(f);s[f]=1;if(a.length>=4)break}}var t=0;while(a.length<4&&t++<10){var ad=dens[R(0,5)],an=R(1,ad-1),f2=an+”/”+ad;if(!s[f2]){a.push(f2);s[f2]=1}}return{q:“What fraction is shaded? (”+num+” of “+den+” parts)”,ans:ans,ch:shuf(a),hint:“Top = shaded. Bottom = total.”,think:“Shade one more. New fraction?”,tp:“t”,fv:{n:num,d:den}}}
+if(lv<=3){var den=dens[R(1,4)],n1=R(1,den-2),n2=R(1,den-n1),aN=n1+n2,ans=aN+”/”+den;var s={},a=[ans];s[ans]=1;[aN-1,aN+1,n1,n2,Math.abs(n1-n2)].forEach(function(v){var f=v+”/”+den;if(v>0&&v<=den&&!s[f]){a.push(f);s[f]=1}});while(a.length<4){var r2=R(1,den),f3=r2+”/”+den;if(!s[f3]){a.push(f3);s[f3]=1}}return{q:n1+”/”+den+” + “+n2+”/”+den+” = ?”,ans:ans,ch:shuf(a),hint:“Same bottom? Just add the tops!”,think:“Can you simplify?”,tp:“t”}}
+if(lv<=4){var den=dens[R(1,4)],n1=R(2,den-1),n2=R(1,n1-1),aN=n1-n2,ans=aN+”/”+den;var s={},a=[ans];s[ans]=1;[aN+1,aN+2,n1,n2,n1+n2].forEach(function(v){var f=v+”/”+den;if(v>0&&v<=den&&!s[f]){a.push(f);s[f]=1}});while(a.length<4){var r2=R(1,den),f3=r2+”/”+den;if(!s[f3]){a.push(f3);s[f3]=1}}return{q:n1+”/”+den+” - “+n2+”/”+den+” = ?”,ans:ans,ch:shuf(a),hint:“Same bottom? Subtract the tops!”,think:“Draw a bar model!”,tp:“t”}}
+var ps=[[2,4],[2,6],[3,6],[2,8],[4,8]],pr=ps[R(0,4)],sm=pr[0],bg=pr[1],en=R(1,Math.max(1,sm-1)),aN=en*(bg/sm),ans=aN+”/”+bg;var s={},a=[ans];s[ans]=1;[aN-1,aN+1,en,en+1,aN+2].forEach(function(v){var f=v+”/”+bg;if(v>0&&v<=bg&&!s[f]){a.push(f);s[f]=1}});while(a.length<4){var r2=R(1,bg),f3=r2+”/”+bg;if(!s[f3]){a.push(f3);s[f3]=1}}return{q:en+”/”+sm+” = ?/”+bg+” (equivalent)”,ans:ans,ch:shuf(a),hint:“Multiply top and bottom by same number!”,think:“Find more equivalents!”,tp:“t”};
+}
+
+function gMon(lv){if(lv<=2){var d1=R(1,9),c1=R(10,95),d2=R(1,5),c2=R(10,90),tot=d1*100+c1+d2*100+c2,dol=Math.floor(tot/100),cen=tot%100,a=”$”+dol+”.”+p2(cen);return{q:”$”+d1+”.”+p2(c1)+” + $”+d2+”.”+p2(c2)+” = ?”,ans:a,ch:shuf([a,”$”+(dol+1)+”.”+p2((cen+10)%100),”$”+Math.max(0,dol-1)+”.”+p2(Math.abs(cen-15)%100),”$”+dol+”.”+p2((cen+25)%100)]),hint:“Add dollars, then cents!”,think:“Change from a bigger note?”,tp:“t”}}var pr=R(3,20),pd=pr+R(2,10),ch=pd-pr;return{q:“Buy $”+pr+”, pay $”+pd+”. Change?”,ans:”$”+ch,ch:shuf([”$”+ch,”$”+(ch+1),”$”+Math.max(0,ch-1),”$”+(ch+2)]),hint:“Count up from the price!”,think:“What coins?”,tp:“t”}}
+function gMeas(lv){if(lv<=2){var m=R(1,9),cm=R(10,90),ans=m*100+cm;return{q:m+” m “+cm+” cm = ? cm”,ans:ans,ch:mc(ans,100,2000),hint:“1 m = 100 cm”,think:“How many cm is “+(m+1)+” m “+cm+” cm?”,tp:“n”}}if(lv<=3){var kg=R(1,9),g=R(100,900),ans=kg*1000+g;return{q:kg+” kg “+g+” g = ? g”,ans:ans,ch:mc(ans,1000,15000),hint:“1 kg = 1000 g”,think:“Heavier or lighter than “+(ans+100)+” g?”,tp:“n”}}var a1=R(2,8),a2=R(10,80),b1=R(1,5),b2=R(10,80),ans=(a1*100+a2)+(b1*100+b2);return{q:a1+“m “+a2+“cm + “+b1+“m “+b2+“cm = ? cm”,ans:ans,ch:mc(ans,100,2000),hint:“Add m and cm separately!”,think:“Convert to cm first!”,tp:“n”}}
+function gTime(lv){if(lv<=2){var h=R(1,12),m=[0,5,10,15,20,25,30,35,40,45,50,55][R(0,11)],a=h+”:”+p2(m);return{q:“Hour hand at “+h+”, minute hand at “+(m===0?12:m/5)+”. Time?”,ans:a,ch:shuf([a,(h%12+1)+”:”+p2(m),h+”:”+p2((m+15)%60),h+”:”+p2((m+30)%60)]),hint:“Short=hours, long=minutes!”,think:“Time in 45 min?”,tp:“t”}}var sH=R(8,14),sM=R(0,3)*15,dH=R(0,3),dM=R(1,3)*15,tot=sH*60+sM+dH*60+dM,eH=Math.floor(tot/60),eM=tot%60,ap=eH>=12?“PM”:“AM”,e12=eH>12?eH-12:eH,d=e12+”:”+p2(eM)+” “+ap;return{q:(sH>12?sH-12:sH)+”:”+p2(sM)+” “+(sH>=12?“PM”:“AM”)+” + “+dH+“h “+dM+“min = ?”,ans:d,ch:shuf([d,e12+”:”+p2((eM+15)%60)+” “+ap,(e12===0?12:e12+1)+”:”+p2(eM)+” “+ap,e12+”:”+p2((eM+30)%60)+” “+ap]),hint:“Add hours first, then minutes!”,think:“What if 30 min more?”,tp:“t”}}
+function gGeo(lv){if(lv<=2){var sh=[{n:“Triangle”,a:3},{n:“Rectangle”,a:4},{n:“Pentagon”,a:5},{n:“Hexagon”,a:6}][R(0,3)];return{q:“How many sides: “+sh.n+”?”,ans:sh.a,ch:mc(sh.a,3,8),hint:“Think about the name!”,think:“Find this shape at home!”,tp:“n”}}if(lv<=4){var n=R(3,4),si=[];for(var i=0;i<n;i++)si.push(R(3,15));if(n===4&&Math.random()>.5){si[2]=si[0];si[3]=si[1]}var ans=0;for(var i=0;i<si.length;i++)ans+=si[i];return{q:“Perimeter: “+si.join(“cm, “)+“cm”,ans:ans,ch:mc(ans,5,80),hint:“Add all sides!”,think:“Each side +1cm?”,tp:“n”}}var ty=[“right angle”,“acute angle”,“obtuse angle”],ix=R(0,2),dg=ix===0?90:ix===1?R(20,80):R(100,170);return{q:dg+” degrees is a _____ angle.”,ans:ty[ix],ch:shuf(ty.concat([“straight angle”])),hint:“Right=90, <90=acute, >90=obtuse”,think:“Make it with your arms!”,tp:“t”}}
+function gBar(lv){var ns=[“Ali”,“Mei”,“Sam”,“Ravi”,“Siti”],n2=[“Ben”,“Lina”,“Tom”,“Priya”,“Wei”];if(lv<=2){var a=R(20,80),b=R(20,80),tot=a+b,w=ns[R(0,4)],w2=n2[R(0,4)];return{q:w+” has “+a+”, “+w2+” has “+b+”. Total?”,ans:tot,ch:mc(tot,20,300),hint:“Total = both bars!”,think:“Give 10 from one. Same total?”,tp:“n”,bar:{p:[a,b],l:[w,w2]}}}if(lv<=3){var tot=R(100,500),df=R(20,80),sm=Math.floor((tot-df)/2),bg=sm+df,w=ns[R(0,4)],w2=n2[R(0,4)];return{q:w+” and “+w2+” have “+tot+”. “+w+” has “+df+” more. “+w2+”=?”,ans:sm,ch:mc(sm,20,400),hint:“Remove “+df+”, split evenly!”,think:“Write as equation!”,tp:“n”,bar:{p:[sm,bg],l:[w2,w]}}}var ml=R(2,5),sm=R(15,50),bg=sm*ml,tot=sm+bg;return{q:“Shop A sold “+ml+“x Shop B. Total “+tot+”. Shop B?”,ans:sm,ch:mc(sm,10,200),hint:“Draw “+(ml+1)+” parts. Total/”+(ml+1),think:“What if “+(ml+1)+“x?”,tp:“n”}}
+
+var GEN={addition:gAdd,subtraction:gSub,multiplication:gMul,division:gDiv,fractions:gFrac,money:gMon,measurement:gMeas,time:gTime,geometry:gGeo,bar_models:gBar};
+function xpNeed(lv){return lv*100+(lv-1)*50}
+function getPet(xp){if(xp<200)return{e:”\uD83E\uDD5A”,n:“Egg”,t:“Hatch me!”};if(xp<600)return{e:”\uD83D\uDC23”,n:“Chick”,t:“Growing!”};if(xp<1500)return{e:”\uD83D\uDC25”,n:“Bird”,t:“Watch me fly!”};if(xp<3000)return{e:”\uD83E\uDD85”,n:“Eagle”,t:“Soaring!”};if(xp<6000)return{e:”\uD83E\uDD89”,n:“Wise Owl”,t:“Knowledge!”};return{e:”\uD83D\uDC09”,n:“Dragon”,t:“Legendary!”}}
+
+var SK=“sg3b”,INIT={xp:0,level:1,streak:0,best:0,correct:0,answered:0,coins:0,tp:{},rq:[],dl:{},lastDay:null,days:0};
+function load(){try{var r=localStorage.getItem(SK);if(r){var d=JSON.parse(r);for(var k in INIT)if(!(k in d))d[k]=INIT[k];return d}}catch(e){}return JSON.parse(JSON.stringify(INIT))}
+function save(d){try{localStorage.setItem(SK,JSON.stringify(d))}catch(e){}}
+
+var D=load(),scr=“home”,topic=null,lvl=1,qs=[],ci=0,picked=null,done=false,showHint=false,showDeep=false,stats={c:0,t:0,xp:0},combo=0,timer=0,isRev=false,tmr=null;
+var $=document.getElementById(“app”);
+
+function draw(){
+try{
+$.innerHTML=””;
+var today=new Date().toDateString();
+var todayMin=Math.floor(((D.dl||{})[today]||0)/60);
+var goal=20,txp=(D.xp||0)+((D.level||1)-1)*150;
+var p=getPet(txp),xpPct=Math.min(((D.xp||0)/xpNeed(D.level||1))*100,100),dayPct=Math.min((todayMin/goal)*100,100);
+var revCt=0;(D.rq||[]).forEach(function(r){if(new Date(r.rd)<=new Date())revCt++});
+
+if(scr===“home”){
+var html=’<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:8px 0">’+’<div style="display:flex;align-items:center;gap:10px">’+’<div style="width:44px;height:44px;border-radius:22px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 15px rgba(102,126,234,.4)">’+p.e+’</div>’+’<div><div style="font-size:15px;font-weight:800">Math Explorer</div><div style="background:rgba(255,255,255,.1);border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700;display:inline-block">Lv. ‘+(D.level||1)+’</div></div>’+’</div>’+’<div style="display:flex;align-items:center;gap:6px;background:rgba(255,215,0,.15);border-radius:20px;padding:6px 14px;font-size:14px;font-weight:700;color:#FFD700">Coins ‘+(D.coins||0)+’</div>’+’</div>’;
+html+=’<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px"><span>Level ‘+(D.level||1)+’</span><span>’+(D.xp||0)+’/’+xpNeed(D.level||1)+’ XP</span></div>’;
+html+=’<div style="width:100%;height:8px;background:rgba(255,255,255,.1);border-radius:4px;margin-bottom:20px;overflow:hidden"><div style="height:100%;border-radius:4px;background:linear-gradient(90deg,#667eea,#764ba2,#f093fb);width:'+xpPct+'%"></div></div>’;
+html+=’<div style="text-align:center;padding:12px 0;margin-bottom:8px"><span style="font-size:56px;display:block;margin-bottom:4px;animation:float 3s ease-in-out infinite">’+p.e+’</span><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7)">’+p.n+’ - ‘+p.t+’</div></div>’;
+html+=’<div style="background:linear-gradient(135deg,rgba(102,126,234,.3),rgba(118,75,162,.3));border-radius:20px;padding:20px;margin-bottom:20px;border:1px solid rgba(255,255,255,.1)">’;
+html+=’<div style="display:flex;align-items:center;gap:16px"><div style="position:relative;width:60px;height:60px;flex-shrink:0"><svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="4"/><circle cx=“30” cy=“30” r=“26” fill=“none” stroke=”’+(todayMin>=goal?”#2ed573”:”#667eea”)+’” stroke-width=“4” stroke-dasharray=”’+(dayPct*1.63)+’ 163” stroke-linecap=“round” transform=“rotate(-90 30 30)”/></svg><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:800">’+(todayMin>=goal?“Done!”:todayMin+“m”)+’</div></div>’;
+html+=’<div style="flex:1"><div style="font-size:15px;font-weight:800;margin-bottom:4px">’+(todayMin>=goal?“Goal Complete!”:“Daily Mission”)+’</div><div style="font-size:12px;color:rgba(255,255,255,.5)">’+(todayMin>=goal?“Great!”:(goal-todayMin)+” min to go”)+’</div></div></div>’;
+if((D.days||0)>1)html+=’<div style="background:linear-gradient(135deg,rgba(255,165,0,.2),rgba(255,69,0,.2));border-radius:16px;padding:12px;margin-top:12px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,165,0,.2)"><span style="font-size:28px">Fire</span><div><div style="font-size:14px;font-weight:800">’+D.days+’ Day Streak!</div></div></div>’;
+html+=’</div>’;
+if(revCt>0)html+=’<div id="revbtn" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);border-radius:20px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 4px 15px rgba(255,107,107,.3)"><div><div style="font-size:14px;font-weight:800">Review Time!</div><div style="font-size:11px;opacity:.8">’+revCt+’ to revisit</div></div><div style="font-size:22px">Go</div></div>’;
+html+=’<div style="display:flex;gap:10px;margin-bottom:20px"><div style="flex:1;background:rgba(255,255,255,.05);border-radius:14px;padding:12px 8px;text-align:center;border:1px solid rgba(255,255,255,.06)"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Correct</div><div style="font-size:20px;font-weight:800">’+(D.correct||0)+’</div></div><div style="flex:1;background:rgba(255,255,255,.05);border-radius:14px;padding:12px 8px;text-align:center;border:1px solid rgba(255,255,255,.06)"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Best Streak</div><div style="font-size:20px;font-weight:800">’+(D.best||0)+’</div></div><div style="flex:1;background:rgba(255,255,255,.05);border-radius:14px;padding:12px 8px;text-align:center;border:1px solid rgba(255,255,255,.06)"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Accuracy</div><div style="font-size:20px;font-weight:800">’+(D.answered?Math.round((D.correct/D.answered)*100):0)+’%</div></div></div>’;
+html+=’<div style="font-size:20px;font-weight:800;margin-bottom:4px">Topics</div><div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px">Singapore Math - Dimensions 3B</div><div id="topics"></div>’;
+$.innerHTML=html;
+var tc=document.getElementById(“topics”);
+TOPICS.forEach(function(t){
+var tp=(D.tp||{})[t.id]||{},td=0;for(var k in tp)td+=(tp[k]&&tp[k].t||0);
+var d=document.createElement(“div”);
+d.style.cssText=“background:rgba(255,255,255,.06);border-radius:16px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;border:1px solid rgba(255,255,255,.06);cursor:pointer”;
+d.innerHTML=’<div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;background:'+t.color+'22;border:1px solid '+t.color+'44;flex-shrink:0">’+t.icon+’</div><div style="flex:1"><div style="font-size:15px;font-weight:700;margin-bottom:2px">’+t.name+’</div><div style="font-size:11px;color:rgba(255,255,255,.45)">’+t.desc+’</div>’+(td>0?’<div style="font-size:10px;color:'+t.color+';margin-top:4px;font-weight:700">’+td+’ solved</div>’:’’)+’</div><div style="font-size:18px;color:rgba(255,255,255,.3)">></div>’;
+d.onclick=function(){topic=t;scr=“levels”;draw()};
+tc.appendChild(d);
+});
+var rb=document.getElementById(“revbtn”);
+if(rb)rb.onclick=function(){startQ({id:“review”,name:“Review”,icon:“R”},1,true)};
+}
+
+else if(scr===“levels”&&topic){
+var html=’<button id="bk" style="background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:8px 14px;font-size:14px;font-weight:600;margin-bottom:16px">Back</button>’;
+html+=’<div style="text-align:center;margin-bottom:24px"><div style="font-size:48px;margin-bottom:8px">’+topic.icon+’</div><div style="font-size:22px;font-weight:800">’+topic.name+’</div><div style="font-size:13px;color:rgba(255,255,255,.5)">’+topic.desc+’</div></div>’;
+html+=’<div style="font-size:17px;font-weight:800;margin-bottom:4px">Select Level</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px">Get 5 correct to unlock next!</div><div id="lgrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px"></div>’;
+html+=’<div style="background:rgba(255,255,255,.05);border-radius:16px;padding:16px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">Tip</div><div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7">Understanding beats speed!</div></div>’;
+$.innerHTML=html;
+document.getElementById(“bk”).onclick=function(){scr=“home”;draw()};
+var g=document.getElementById(“lgrid”);
+for(var i=0;i<topic.levels;i++){(function(l){
+var tp=(D.tp||{})[topic.id]||{},st=tp[l]||{c:0,t:0},pr=tp[l-1]||{c:0,t:0};
+var unlk=l===1||pr.c>=5,mast=st.c>=8;
+var b=document.createElement(“button”);
+b.style.cssText=“aspect-ratio:1;border-radius:14px;border:1px solid rgba(255,255,255,.1);font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-direction:column;background:”+(mast?“rgba(46,213,115,.2)”:unlk?“rgba(255,255,255,.06)”:“rgba(255,255,255,.02)”)+”;color:”+(unlk?”#fff”:“rgba(255,255,255,.2)”)+”;cursor:”+(unlk?“pointer”:“default”);
+b.textContent=mast?”*”:unlk?l:“L”;
+if(unlk)b.onclick=function(){startQ(topic,l,false)};
+g.appendChild(b);
+})(i+1)}
+}
+
+else if(scr===“quiz”&&qs.length>0){
+var q=qs[ci],isOk=done&&(q.tp===“n”?picked===q.ans:String(picked)===String(q.ans));
+var tricky=q.tp===“n”&&hasCd(q.ch,q.ans);
+var dots=””;for(var i=0;i<qs.length;i++)dots+=’<div style=“width:’+(i===ci?24:10)+‘px;height:10px;border-radius:5px;display:inline-block;margin:0 3px;background:’+(i<ci?“linear-gradient(135deg,#667eea,#764ba2)”:i===ci?”#fff”:“rgba(255,255,255,.15)”)+’”></div>’;
+var htm=’<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><button id="qx" style="background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:8px 14px;font-size:14px;font-weight:600">X</button><div>’+dots+’</div><div id="tmr" style="font-size:12px;color:rgba(255,255,255,.4);font-weight:700">’+Math.floor(timer/60)+’:’+p2(timer%60)+’</div></div>’;
+htm+=’<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="font-size:14px">’+(topic?topic.icon:””)+’</span><span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.6)">’+(isRev?“Review”:(topic?topic.name:””)+” Level “+lvl)+’</span></div>’;
+htm+=’<div style="background:rgba(255,255,255,.07);border-radius:24px;padding:24px;margin-bottom:20px;border:1px solid rgba(255,255,255,.08);min-height:100px">’;
+if(tricky&&!done)htm+=’<div style="background:rgba(255,165,0,.15);border:1px solid rgba(255,165,0,.3);border-radius:12px;padding:8px 14px;margin-bottom:14px;font-size:13px;font-weight:700;color:#FFA500">WARNING: Choices are very close! Think carefully!</div>’;
+htm+=’<div style="font-size:18px;font-weight:700;line-height:1.5;text-align:center">’+q.q+’</div>’;
+if(q.fv){htm+=’<div style="display:flex;justify-content:center;gap:4px;margin-top:16px">’;for(var i=0;i<q.fv.d;i++)htm+=’<div style=“width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:’+(i<q.fv.n?“rgba(102,126,234,.6)”:“rgba(255,255,255,.08)”)+’”></div>’;htm+=’</div>’;}
+if(q.bar){htm+=’<div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.05);border-radius:12px"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px;text-align:center">Bar Model</div><div style="display:flex;gap:4px;height:28px">’;q.bar.p.forEach(function(v,i){htm+=’<div style=“flex:’+v+’;background:’+(i===0?“rgba(102,126,234,.4)”:“rgba(240,147,251,.4)”)+’;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700”>’+(q.bar.l[i]||”?”)+’</div>’});htm+=’</div></div>’;}
+htm+=’</div>’;
+if(!done){htm+=’<div style="display:flex;gap:10px;margin-bottom:16px"><button id="hbtn" style="background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);color:#FFD700;border-radius:14px;padding:10px 16px;font-size:13px;font-weight:700">’+(showHint?“Hide Hint”:“Hint?”)+’</button><button id="dbtn" style="background:rgba(102,126,234,.15);border:1px solid rgba(102,126,234,.3);color:#a8b5ff;border-radius:14px;padding:10px 16px;font-size:13px;font-weight:700">Think Deeper</button></div>’;}
+if(showHint)htm+=’<div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);border-radius:16px;padding:16px;margin-bottom:12px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85)">Hint: ‘+q.hint+’</div>’;
+if(showDeep)htm+=’<div style="background:rgba(102,126,234,.1);border:1px solid rgba(102,126,234,.2);border-radius:16px;padding:16px;margin-bottom:12px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.8)">Think: ‘+q.think+’</div>’;
+if(!done&&!showHint)htm+=’<div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:12px;font-style:italic">’+THINKS[ci%THINKS.length]+’</div>’;
+htm+=’<div id="choices">’;
+q.ch.forEach(function(c,i){var isSel=done&&(picked===c||String(picked)===String(c));var isAns=q.tp===“n”?c===q.ans:String(c)===String(q.ans);var bg=“rgba(255,255,255,.06)”,bc=“rgba(255,255,255,.08)”;if(done&&isSel){bg=isAns?“rgba(46,213,115,.2)”:“rgba(255,71,87,.2)”;bc=isAns?”#2ed573”:”#ff4757”}else if(done&&isAns){bg=“rgba(46,213,115,.15)”;bc=”#2ed573”}htm+=’<button class="cb" data-i="'+i+'" style="width:100%;padding:16px 20px;border-radius:16px;border:2px solid '+bc+';background:'+bg+';color:#fff;font-size:16px;font-weight:600;text-align:center;margin-bottom:10px">’+(q.tp===“t”?c:(typeof c===“number”?c.toLocaleString():c))+’</button>’});
+htm+=’</div>’;
+if(done){htm+=’<div style="animation:slideUp .3s;margin-top:12px"><div style=“background:’+(isOk?“rgba(46,213,115,.1)”:“rgba(255,71,87,.1)”)+’;border:1px solid ‘+(isOk?“rgba(46,213,115,.3)”:“rgba(255,71,87,.3)”)+’;border-radius:16px;padding:16px;text-align:center;margin-bottom:12px”><div style="font-size:28px;margin-bottom:8px">’+(isOk?“Correct!”:“Try Again!”)+’</div><div style="font-size:15px;font-weight:700;margin-bottom:4px">’+(isOk?CHEERS[R(0,CHEERS.length-1)]:“Not quite. Keep learning!”)+’</div>’;if(!isOk)htm+=’<div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:8px">Answer: <strong>’+(typeof q.ans===“number”?q.ans:q.ans)+’</strong><br><span style="font-size:11px">Coming back for review!</span></div>’;if(isOk&&combo>=3)htm+=’<div style="font-size:12px;color:#FFD700;margin-top:4px">’+combo+‘x Combo! +’+(combo>=5?15:5)+’ XP</div>’;htm+=’</div>’;
+if(isOk)htm+=’<div style="background:rgba(102,126,234,.1);border:1px solid rgba(102,126,234,.2);border-radius:16px;padding:16px;margin-bottom:12px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.8)">Go deeper: ‘+q.think+’</div>’;
+else htm+=’<div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);border-radius:16px;padding:16px;margin-bottom:12px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85)">How to solve: ‘+q.hint+’</div>’;
+htm+=’<button id="nxt" style="width:100%;padding:16px;border-radius:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:16px;font-weight:700;margin-top:10px;box-shadow:0 4px 20px rgba(102,126,234,.4)">’+(ci+1>=qs.length?“See Results”:“Next Question”)+’</button></div>’;}
+if(combo>=3&&!done)htm=’<div style="position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f093fb,#f5576c);border-radius:20px;padding:8px 20px;font-size:14px;font-weight:800;z-index:100">’+combo+‘x Combo!</div>’+htm;
+$.innerHTML=htm;
+document.getElementById(“qx”).onclick=function(){clearInterval(tmr);scr=“home”;draw()};
+var hb=document.getElementById(“hbtn”);if(hb)hb.onclick=function(){showHint=!showHint;draw()};
+var db=document.getElementById(“dbtn”);if(db)db.onclick=function(){showDeep=!showDeep;draw()};
+var nb=document.getElementById(“nxt”);if(nb)nb.onclick=doNext;
+if(!done){var cbs=document.querySelectorAll(”.cb”);for(var i=0;i<cbs.length;i++){(function(b){b.onclick=function(){doAns(q.ch[parseInt(b.getAttribute(“data-i”))])}})(cbs[i])}}
+}
+
+else if(scr===“results”){
+var pct=stats.t?Math.round((stats.c/stats.t)*100):0,st=pct>=90?3:pct>=70?2:pct>=50?1:0;
+var msg=[“Keep practicing!”,“Good effort!”,“Great job!”,“Outstanding!”][st];
+var stars=””;for(var i=0;i<3;i++)stars+=’<span style="font-size:32px;opacity:'+(i<st?1:.2)+'">*</span>’;
+$.innerHTML=’<div style="animation:slideUp .4s"><div style="text-align:center"><div style="font-size:64px;margin-bottom:12px;animation:celebrate .6s">’+(pct>=90?“Trophy”:pct>=70?“Star”:“Good”)+’</div><div style="font-size:24px;font-weight:900;margin-bottom:8px">Session Complete!</div><div style="font-size:14px;color:rgba(255,255,255,.6);margin-bottom:24px">’+msg+’</div></div><div style="background:rgba(255,255,255,.07);border-radius:24px;padding:28px;text-align:center;border:1px solid rgba(255,255,255,.08)"><div style="font-size:40px;margin-bottom:4px">’+stars+’</div><div style="display:flex;justify-content:space-around;margin:20px 0"><div style="text-align:center"><div style="font-size:28px;font-weight:800;color:#667eea">’+stats.c+’/’+stats.t+’</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">Correct</div></div><div style="text-align:center"><div style="font-size:28px;font-weight:800;color:#667eea">’+pct+’%</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">Accuracy</div></div><div style="text-align:center"><div style="font-size:28px;font-weight:800;color:#667eea">+’+stats.xp+’</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">XP</div></div></div><div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding:10px 16px;background:rgba(255,215,0,.1);border-radius:12px"><span style="font-size:14px;font-weight:700;color:#FFD700">+’+(stats.c*3+(stats.t-stats.c))+’ coins</span></div></div><div style="text-align:center;margin:20px 0"><span style="font-size:40px">’+p.e+’</span><div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:4px">Keep earning XP!</div></div>’+(stats.t-stats.c>0?’<div style="background:rgba(255,107,107,.1);border-radius:16px;padding:16px;margin-bottom:16px;text-align:center"><div style="font-size:14px;font-weight:700;margin-bottom:4px">Review Added</div><div style="font-size:12px;color:rgba(255,255,255,.5)">’+(stats.t-stats.c)+’ coming back tomorrow!</div></div>’:’’)+’<button id="pa" style="width:100%;padding:16px;border-radius:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:16px;font-weight:700;box-shadow:0 4px 20px rgba(102,126,234,.4)">Play Again</button><button id="bh" style="width:100%;padding:16px;border-radius:16px;background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-weight:700;margin-top:10px">Home</button></div>’;
+document.getElementById(“pa”).onclick=function(){startQ(topic,lvl,isRev)};
+document.getElementById(“bh”).onclick=function(){scr=“home”;draw()};
+}
+}catch(err){$.innerHTML=’<div style="padding:40px;color:red;font-size:14px">Error: ‘+err.message+’<br>’+err.stack+’</div>’;}
+}
+
+function startQ(tp,lv,rev){topic=tp;lvl=lv;isRev=rev||false;if(rev){qs=[];(D.rq||[]).forEach(function(r){if(new Date(r.rd)<=new Date()&&qs.length<8){var g=(GEN[r.tid]||gAdd)(r.lv);g.rid=r.id;qs.push(g)}});if(!qs.length){scr=“home”;draw();return}}else{qs=[];for(var i=0;i<8;i++)qs.push((GEN[tp.id]||gAdd)(lv))}ci=0;picked=null;done=false;showHint=false;showDeep=false;stats={c:0,t:0,xp:0};combo=0;timer=0;scr=“quiz”;clearInterval(tmr);tmr=setInterval(function(){timer++;var t=document.getElementById(“tmr”);if(t)t.textContent=Math.floor(timer/60)+”:”+p2(timer%60)},1000);draw()}
+
+function doAns(val){if(done)return;picked=val;done=true;var q=qs[ci],ok=q.tp===“n”?val===q.ans:String(val)===String(q.ans);combo=ok?combo+1:0;if(ok)sndOk();else sndNo();var xg=ok?15:2;if(combo>=3)xg+=5;if(combo>=5)xg+=10;if(!showHint&&ok)xg+=5;stats={c:stats.c+(ok?1:0),t:stats.t+1,xp:stats.xp+xg};var today=new Date().toDateString();D.xp=(D.xp||0)+xg;D.coins=(D.coins||0)+(ok?3:1);D.answered=(D.answered||0)+1;if(ok){D.correct=(D.correct||0)+1;D.streak=(D.streak||0)+1;D.best=Math.max(D.best||0,D.streak)}else{D.streak=0;if(!D.rq)D.rq=[];D.rq.push({id:Date.now(),tid:topic.id,lv:lvl,q:q.q,ad:today,rd:new Date(Date.now()+86400000).toDateString()})}if(!D.tp)D.tp={};var key=isRev?“review”:topic.id;if(!D.tp[key])D.tp[key]={};if(!D.tp[key][lvl])D.tp[key][lvl]={c:0,t:0};D.tp[key][lvl]={c:D.tp[key][lvl].c+(ok?1:0),t:D.tp[key][lvl].t+1};if(!D.dl)D.dl={};D.dl[today]=(D.dl[today]||0)+3;var nd=xpNeed(D.level||1);if(D.xp>=nd){D.level=(D.level||1)+1;D.xp-=nd}if(D.lastDay!==today){var yd=new Date(Date.now()-86400000).toDateString();D.days=D.lastDay===yd?(D.days||0)+1:1;D.lastDay=today}if(isRev&&ok&&q.rid)D.rq=(D.rq||[]).filter(function(r){return r.id!==q.rid});save(D);draw()}
+
+function doNext(){if(ci+1>=qs.length){clearInterval(tmr);scr=“results”;draw();return}ci++;picked=null;done=false;showHint=false;showDeep=false;draw()}
+
+draw();
+})();
+</script>
+
+</body>
+</html>
